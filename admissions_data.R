@@ -1,6 +1,3 @@
-install.packages("reshape2")
-library("reshape2")
-
 #Admissions data
 co4 = read.csv("Cohort4.csv")
 co5 = read.csv("Cohort5.csv")
@@ -78,6 +75,12 @@ coun = co4_5$Local.state[co4_5$Local.country != "UNITED STATES"] = "intl"
 intl <- which(co4_5$Local.country!="UNITED STATES")
 co4_5$Local.state[intl,] <- "intl"
 head(co4_5, 20)
+
+# change NAs to zeros for Scholarship
+
+co4_5$Scholarship[is.na(co4_5$Scholarship)] <- 0
+co4_5$Scholarship
+str(co4_5)  #is num rather than int
 
 #really shitty model
 
