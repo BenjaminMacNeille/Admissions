@@ -82,7 +82,7 @@ co4_5$Scholarship[is.na(co4_5$Scholarship)] <- 0
 co4_5$Scholarship
 str(co4_5)  #is num rather than int
 
-#really shitty model
+#first model
 
 install.packages("tree")
 library("tree")
