@@ -9,6 +9,13 @@ co4_check = read.csv("Cohort4.csv")
 co5_check = read.csv("Cohort5.csv")
 co7_check = read.csv("Cohort7.csv")
 
+drops <- c("College.Decision", "College.Decision.Full", "Advisor", "Intent.Summary", "Intent.Response")
+co7 <- co7[ , !(names(co7) %in% drops)]
+#Match column names
+colnames(co7)[1] <- "Status"
+colnames(co7)[6] <- "GRE.Verbal"
+colnames(co7)[7] <- "GRE.Math"
+
 head(co4)
 head(co5)
 head(co7)
@@ -23,8 +30,17 @@ str(co7)
 #offer cards made - ind. declined school offer (never formally declined)
 #recieved - ind. declined school offer
 
+as.numeric(co7$Scholarship)
+co7$Status[co5$Scholarship != 5 | 10] = 0
+
 summary(co4$Status)
 summary(co5$Status)
+summary(co7$Status)
+summary(co4$Scholarship)
+summary(co5$Scholarship)
+summary(co7$Scholarship)
+
+summary(co7$Status)
 
 #Group enrolled and non-enrolled
 
@@ -45,6 +61,9 @@ co5
 co5_check
 
 #bind dataframe 4 and 5 together
+
+### ADD IN co_7 here
+
 
 co4_5 <- rbind(co5, co4)
 co4_5
@@ -84,9 +103,15 @@ str(co4_5)  #is num rather than int
 
 #first model
 
-install.packages("tree")
+#install.packages("tree")
 library("tree")
 co4_5.tree <- tree(Status~.-Local.country, data = co4_5)
+
+#NA's were coerced
+
 plot(co4_5.tree)
 text(co4_5.tree, pretty = 0)
+
+#Display split criterion, number of obs in a branch, deviance, and overall prediction of branch
+co4_5.tree
 
