@@ -1,13 +1,13 @@
 #Admissions data
 co4 = read.csv("Cohort4.csv")
 co5 = read.csv("Cohort5.csv")
-co7 <- read.csv("Cohort7.csv")
+co7 <- read.csv("Cohort_7.csv")
 
 #to check new csv against old
 
 co4_check = read.csv("Cohort4.csv")
 co5_check = read.csv("Cohort5.csv")
-co7_check = read.csv("Cohort7.csv")
+co7_check = read.csv("Cohort_7.csv")
 
 drops <- c("College.Decision", "College.Decision.Full", "Advisor", "Intent.Summary", "Intent.Response")
 co7 <- co7[ , !(names(co7) %in% drops)]
