@@ -1,13 +1,13 @@
-#Admissions data
-co4 = read.csv("Cohort4.csv")
-co5 = read.csv("Cohort5.csv")
-co7 <- read.csv("Cohort_7.csv")
-
 #to check new csv against old
 
 co4_check = read.csv("Cohort4.csv")
 co5_check = read.csv("Cohort5.csv")
 co7_check = read.csv("Cohort_7.csv")
+
+#Admissions data
+co4 = read.csv("Cohort4.csv")
+co5 = read.csv("Cohort5.csv")
+co7 <- read.csv("Cohort_7.csv")
 
 drops <- c("College.Decision", "College.Decision.Full", "Advisor", "Intent.Summary", "Intent.Response")
 co7 <- co7[ , !(names(co7) %in% drops)]
@@ -30,15 +30,21 @@ str(co7)
 #offer cards made - ind. declined school offer (never formally declined)
 #recieved - ind. declined school offer
 
-as.numeric(co7$Scholarship)
-co7$Status[co5$Scholarship != 5 | 10] = 0
+co7$Scholarship = as.character(co7$Scholarship)
+co7$Scholarship[co7$Scholarship == "X"] <-5
+co7$Scholarship = as.numeric(co7$Scholarship)
+co7$Scholarship[is.na(co7$Scholarship)] = 0
+
+table(co7$Scholarship)
+co7 = co7[ which( ! co7$Status %in% "Denied") , ]
+table(co7$Status)
 
 summary(co4$Status)
 summary(co5$Status)
 summary(co7$Status)
-summary(co4$Scholarship)
-summary(co5$Scholarship)
-summary(co7$Scholarship)
+table(co4$Scholarship)
+table(co5$Scholarship)
+table(co7$Scholarship)
 
 summary(co7$Status)
 
@@ -54,11 +60,18 @@ co5$Status
 str(co5$Status)
 co5$Status <- as.character(co5$Status)
 co5$Status[co5$Status == "Enrolled Packet Made"] = 1
-co5$Status[co5$Status == "Registered"] = 1
+co5$Status[co5$Status == "Offered - Cards Made"] = 1
+co5$Status
 co5$Status[co5$Status != 1] = 0
 
-co5
-co5_check
+table(co7$Status)
+str(co7$Status)
+co7$Status <- as.character(co7$Status)
+co7$Status[co7$Status == "Enrolled Packet Made"] = 1
+co7$Status[co7$Status == "Registered"] = 1
+co7$Status[co7$Status != 1] = 0
+co7
+co7_check
 
 #bind dataframe 4 and 5 together
 
