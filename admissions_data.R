@@ -29,9 +29,13 @@ str(co7)
 #offer declined = ind. declined school offer
 #offer cards made - ind. declined school offer (never formally declined)
 #recieved - ind. declined school offer
+co7$Scholarship <- as.character(co7$Scholarship)
+co7$Scholarship[co7$Scholarship=="X"] <- "5"
+co7$Scholarship
+co7$Scholarship <- as.numeric(co7$Scholarship)
+co7$Scholarship[is.na(co7$Scholarship)] <- 0
 
-as.numeric(co7$Scholarship)
-co7$Status[co5$Scholarship != 5 | 10] = 0
+#co7$Status[co5$Scholarship != 5 | 10] = 0
 
 summary(co4$Status)
 summary(co5$Status)
@@ -114,4 +118,125 @@ text(co4_5.tree, pretty = 0)
 
 #Display split criterion, number of obs in a branch, deviance, and overall prediction of branch
 co4_5.tree
+
+
+
+#June 22nd
+#install.packages("caret")
+library(caret)
+set.seed(2)
+na_count <-sapply(co4_5, function(y) sum(length(which(is.na(y)))))
+na_count
+complete <- complete.cases(co4_5)
+base4_5 <- co4_5[complete,]
+str(base4_5)
+str(co4_5)
+table(co4_5$Status)
+head(base4_5)
+head(co4_5)
+base4_5$Status <-as.factor(base4_5$Status)
+
+levels(base4_5$Status) <- c("N","Y")
+
+control <- trainControl(method = "repeatedcv", 
+                        repeats = 5, 
+                        classProbs = TRUE)
+
+
+set.seed(2)
+logisticReg <- train(Status~.,
+                     data=base4_5,
+                     method = "glm", 
+                     trControl=control)
+logisticReg
+logisticReg$finalModel$coefficients
+varImp(logisticReg)
+
+set.seed(2)
+svmFit <- train(Status ~ ., 
+                data=base4_5,
+                method = "svmRadial", 
+                preProc = c("center", "scale"), 
+                tuneLength = 10, 
+                trControl = control)
+svmFit
+plot(svmFit, scales = list(x = list(log = 2))) 
+plot(svmFit)
+
+set.seed(2)
+
+gbmFit <- train(Status ~ .,
+                data=base4_5,
+                method = "gbm",
+                trControl = control,
+                verbose = FALSE)   
+gbmFit
+
+resamp <- resamples(list(SVM = svmFit, Logistic = logisticReg, GBM = gbmFit))
+summary(resamp)
+
+
+
+modelDifferences <- diff(resamp)
+summary(modelDifferences)
+dotplot(modelDifferences)
+
+test_0 <- base4_5[,-5]
+test_0$Scholarship <- 0
+test_5 <- base4_5[,-5]
+test_5$Scholarship <- 5
+test_10 <- base4_5[,-5]
+test_10$Scholarship <- 10
+
+str(test_0)
+
+predict_0 <- predict(logisticReg, newdata = test_0, type = "prob")
+predict_0 <- predict_0[,-1]
+str(predict_0)
+
+predict_5 <- predict(logisticReg, newdata = test_5, type = "prob")
+predict_5 <- predict_5[,-1]
+str(predict_5)
+
+predict_10 <- predict(logisticReg, newdata = test_10, type = "prob")
+predict_10 <- predict_10[,-1]
+str(predict_10)
+
+predict_log <- as.data.frame(cbind(predict_0, predict_5, predict_10))
+str(predict_log)
+View(predict_log)
+
+
+
+#SVM predict
+predict_0_svm <- predict(svmFit, newdata = test_0, type = "prob")
+predict_0_svm <- predict_0_svm[,-1]
+
+
+predict_5_svm <- predict(svmFit, newdata = test_5, type = "prob")
+predict_5_svm <- predict_5_svm[,-1]
+
+
+predict_10_svm <- predict(svmFit, newdata = test_10, type = "prob")
+predict_10_svm <- predict_10_svm[,-1]
+
+predict_svm <- as.data.frame(cbind(predict_0_svm, predict_5_svm, predict_10_svm))
+
+
+View(predict_svm)
+
+
+#combined
+log_svm_compare <- as.data.frame(cbind(predict_log, predict_svm))
+View(log_svm_compare)
+
+library("dplyr")
+
+log_svm_compare2 <- log_svm_compare %>%
+  mutate(diff_0 = predict_0_svm - predict_0) %>%
+  mutate(diff_5 = predict_5_svm - predict_5) %>%
+  mutate(diff_10 = predict_10_svm - predict_10)
+
+
+View(log_svm_compare2)
 
