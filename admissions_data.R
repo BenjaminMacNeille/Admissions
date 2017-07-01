@@ -11,7 +11,6 @@ co4 = read.csv("Cohort4.csv")
 co5 = read.csv("Cohort5.csv")
 co7 <- read.csv("Cohort_7.csv")
 
-
 drops <- c("College.Decision", "College.Decision.Full", "Advisor", "Intent.Summary", "Intent.Response")
 co7 <- co7[ , !(names(co7) %in% drops)]
 #Match column names
@@ -19,6 +18,16 @@ colnames(co7)[1] <- "Status"
 colnames(co7)[6] <- "GRE.Verbal"
 colnames(co7)[7] <- "GRE.Math"
 
+list_co4 <- rep('4',length(co4_check$Scholarship))
+list_co5 <- rep('5',length(co5_check$Scholarship))
+list_co7 <- rep('7',length(co7_check$Scholarship))
+
+co4 = cbind(co4, list_co4)
+colnames(co4)[8] = "cohort"
+co5 = cbind(co5, list_co5)
+colnames(co5)[8] = "cohort"
+co7 = cbind(co7, list_co7)
+colnames(co7)[8] = "cohort"
 
 head(co4)
 head(co5)
