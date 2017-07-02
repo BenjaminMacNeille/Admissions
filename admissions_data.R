@@ -13,10 +13,13 @@ co7 <- read.csv("Cohort_7.csv")
 
 drops <- c("College.Decision", "College.Decision.Full", "Advisor", "Intent.Summary", "Intent.Response")
 co7 <- co7[ , !(names(co7) %in% drops)]
+
 #Match column names
 colnames(co7)[1] <- "Status"
 colnames(co7)[6] <- "GRE.Verbal"
 colnames(co7)[7] <- "GRE.Math"
+
+#Create a column to identify each cohort, then bind into original dataframe
 
 list_co4 <- rep('4',length(co4_check$Scholarship))
 list_co5 <- rep('5',length(co5_check$Scholarship))
@@ -48,7 +51,7 @@ str(co7)
 co_total <- rbind(co5, co4, co7)
 table(co_total$Status)
 table(co_total$Scholarship)
-
+str(co_total)
 
 co_total$Scholarship <- as.character(co_total$Scholarship)
 co_total$Scholarship[co_total$Scholarship=="X"] <- "5"
@@ -68,27 +71,6 @@ co_total$Status <- as.character(co_total$Status)
 co_total$Status = ifelse(co_total$Status=="Offer Declined", 0, 1)
 
 table(co_total$Status)
-
-#Cohort5 enrolled + registered ==1, others ==0
-'''   #####Check with alan to see if this code can be ommited######
-co5$Status
-str(co5$Status)
-co5$Status <- as.character(co5$Status)
-co5$Status[co5$Status == "Enrolled Packet Made"] = 1
-co5$Status[co5$Status == "Offered - Cards Made"] = 1
-co5$Status
-co5$Status[co5$Status != 1] = 0
-
-table(co7$Status)
-str(co7$Status)
-co7$Status <- as.character(co7$Status)
-co7$Status[co7$Status == "Enrolled Packet Made"] = 1
-co7$Status[co7$Status == "Registered"] = 1
-co7$Status[co7$Status != 1] = 0
-co7
-co7_check
-
-'''
 
 # drop the zip code column
 zip = "Local.zip"
@@ -113,22 +95,67 @@ co_total$Local.country = as.character(co_total$Local.country)
 co_total$Local.country[co_total$Local.country != "UNITED STATES"] = "intl"
 co_total$Local.country
 
-co_total
+str(co_total)
 
 
 #first model
 
 #install.packages("tree")
 library("tree")
-co_total.tree <- tree(Status~., data = co_total)
+
+table(co_total$Status)
+
+decision=ifelse(co_total$Status<=0,"No","Yes")
+table(decision)
+co_total = data.frame(co_total, decision)
+co_total.tree <- tree(decision~. -Status, data = co_total)
 
 #NA's were coerced
 
 plot(co_total.tree)
-text(co_total.tree, cex = .5)
+text(co_total.tree, cex = .5, pretty = 0)
 
-#Display split criterion, number of obs in a branch, deviance, and overall prediction of branch
+#residual mean deviance, misclassification error rate
+
+summary(co_total.tree)
+
+#Display split criterion, 
+#number of obs in a branch, deviance, 
+#and overall prediction of branch
 co_total.tree
+
+set.seed (2)
+train=sample(1:nrow(co_total), 100)
+co_total.test=co_total[-train ,]
+decision.test=decision[-train]
+
+###Find Accuracy from table below = (true negatives + true positives) / total
+
+co_total.tree=tree(decision~. -Status,co_total,subset=train)
+tree.pred=predict(co_total.tree,co_total.test,type="class")
+table(tree.pred ,decision.test)
+
+#tree trimming and cross validation
+
+set.seed (3)
+cv.co_total =cv.tree(co_total.tree ,FUN=prune.misclass )
+names(cv.co_total)
+cv.co_total
+
+#size = number of terminal nodes considered
+#k = value of the cost-complexity parameter
+#dev = cross validation error rate
+
+par(mfrow=c(1,2))
+plot(cv.co_total$size ,cv.co_total$dev ,type="b")
+plot(cv.co_total$k ,cv.co_total$dev ,type="b")
+
+prune.co_total=prune.misclass(co_total.tree,best=4)
+plot(prune.co_total)
+text(prune.co_total,cex = 0.5, pretty=0)
+
+tree.pred=predict(prune.co_total,co_total.test,type="class")
+table(tree.pred ,decision.test)
 
 #June 22nd
 #install.packages("caret")
